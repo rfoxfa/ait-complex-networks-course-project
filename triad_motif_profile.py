@@ -12,10 +12,10 @@ __version__ = "1.0.0"
 import networkx as nx
 
 
-def extract_triad_motif_significance_profile(network):
+def extract_triad_motif_significance_profile(network, algorithm='mfinder'):
     """
-    Given an input network, return a triad motif significance profile.
+    Given an input network and an optional algorithm parameter, returns a 
+    triad motif significance profile.
     """
     pass
-
 
