@@ -8,6 +8,8 @@ __Project Description__: Write a program that can extract the triad motif signif
 
 ### Background:
 
+The mining of graphs in terms of their local substructure is a well-established methodology to analyze networks. It was hypothesized that motifs - subgraph patterns which appear significantly more often than expected at random - play a key role for the ability of a system to perform its task.
+
 A __triad motif__ is a 3-node, connected subgraph in which the configuration of the links is predefined.
 
 For undirected networks, we have only 2 types of triadic motifs, while for directed networks we have 13.
