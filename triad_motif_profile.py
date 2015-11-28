@@ -6,10 +6,11 @@ of an input network.
 """
 
 __author__  = "Ross Flieger-Allison"
-__date__    = "18-11-2015"
+__date__    = "28-11-2015"
 __version__ = "1.0.0"
 
 import networkx as nx
+import matplotlib.pyplot as plt
 
 
 def extract_triad_motif_significance_profile(network, algorithm='mfinder'):
