@@ -12,7 +12,7 @@ The mining of graphs in terms of their local substructure is a well-established 
 
 A __triad motif__ is a 3-node, connected subgraph in which the configuration of the links is predefined.
 
-For undirected networks, we have only 2 types of triadic motifs, while for directed networks we have 13.
+For undirected networks, we have only 2 types of connected non-isomorphic triadic triadic motifs, while for directed networks we have 13.
 
 The __motif discovery problem__ comprises two main steps: 
 

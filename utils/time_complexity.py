@@ -8,7 +8,7 @@ from networks import build_erdos_renyi_network
 from triad_motif_profile import count_undirected_triad_motifs
 
 
-def compute_undirected_count_execution_time(n=100, p=0.5, num_iterations=100):
+def compute_undirected_count_execution_time(n=300, p=0.5, num_iterations=10):
     """
     Computes the average execution time (in seconds) of the undirected triad motif counting 
     function on a random undirected network of size n and connection probability p.
