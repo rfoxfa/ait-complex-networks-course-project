@@ -12,7 +12,13 @@ def randomize(network, num_rewirings=None, directed=False):
 
     Arguments:
         network => The input network.
-        num_rewirings => The number of rewirings done to make the 
+        num_rewirings => The number of rewirings performed before it is considered
+        randomized
+        directed => Whether or not the graph is directed.
+
+    Returns:
+        A randomized instance of the input network such that the degree sequence is 
+        preserved.
     """
 
     # Set a counter for the number of rewirings successfully completed.
@@ -24,40 +30,41 @@ def randomize(network, num_rewirings=None, directed=False):
     # Don't terminate until all the necessary rewirings have been performed.
     while rewirings_completed < num_rewirings:
 
+        # Store the number of edges in the network to avoid repeated computation.
+        network_edges = nx.edges(network)
+
         # Randomly selected a link from the network.
-        link1 = (source1, target1) = random.choice(nx.edges(network))
+        link1 = (source1, target1) = random.choice(network_edges)
 
-        # Randomly selected a DIFFERENT link from the network.
-        link2 = (source2, target2) = random.choice([link for link in nx.edges(network) if link != link1])
+        # Randomly selected a DIFFERENT link from the network (no sharing of nodes allowed).
+        link2 = (source2, target2) = random.choice([link for link in network_edges
+                                                    if not any(node in link for node in link1)])
 
-        # If the two links do not share any nodes...
-        if not any(node in link1 for node in link2):
+        # If the graph is directed, there is only one option.
+        # If the graph is undirected, there are two options, each with a 50-50 chance.
+        if not directed and random.random() < 0.5:
 
-            # If the graph is directed, there is only one option.
-            # If the graph is undirected, there are two options, each with a 50-50 chance.
-            if not directed and random.random() < 0.5:
+            # Rewire links A-B and C-D to A-C and B-D.
+            new_link1 = (source1, source2)
+            new_link2 = (target1, target2)
 
-                # Rewire links A-B and C-D to A-C and B-D.
-                new_link1 = (source1, source2)
-                new_link2 = (target1, target2)
+        else:
 
-            else:
+            # Rewire links A-B and C-D to A-D and C-B.
+            new_link1 = (source1, target2)
+            new_link2 = (source2, target1)
 
-                # Rewire links A-B and C-D to A-D and C-B.
-                new_link1 = (source1, target2)
-                new_link2 = (source2, target1)
+        # If the new links aren't in the network already, replace the old links with the new links.
+        if not network.has_edge(*new_link1) and not network.has_edge(*new_link2):
 
-            # If the new links aren't in the network already, replace the old links with the new links.
-            if not network.has_edge(*new_link1) and not network.has_edge(*new_link2):
+            # Remove the old links.
+            network.remove_edges_from([link1, link2])
 
-                # Remove the old links.
-                network.remove_edges_from([link1, link2])
+            # Add the new links.
+            network.add_edges_from([new_link1, new_link2])
 
-                # Add the new links.
-                network.add_edges_from([new_link1, new_link2])
-
-                # Incrememnt our rewiring counter for each individual rewired edge.
-                rewirings_completed += 2
+            # Incrememnt our rewiring counter for each individual rewired edge.
+            rewirings_completed += 2
 
     return network
 
