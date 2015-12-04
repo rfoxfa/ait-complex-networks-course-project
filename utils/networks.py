@@ -33,12 +33,23 @@ def randomize(network, num_rewirings=None, directed=False):
         # Store the number of edges in the network to avoid repeated computation.
         network_edges = nx.edges(network)
 
+        # If there isn't at least 1 edge, break out and return.
+        if len(network_edges) == 0:
+            break
+
         # Randomly selected a link from the network.
         link1 = (source1, target1) = random.choice(network_edges)
 
+        # Find all the edges that share no nodes with link1.
+        disjoint_links = [link for link in network_edges if not any(node in link for node in link1)]
+
+        # If there are no disjoint links, it would be impossible to randomize the network while
+        # still preserving the degree sequence, so break out and return.
+        if len(disjoint_links) == 0:
+            break
+
         # Randomly selected a DIFFERENT link from the network (no sharing of nodes allowed).
-        link2 = (source2, target2) = random.choice([link for link in network_edges
-                                                    if not any(node in link for node in link1)])
+        link2 = (source2, target2) = random.choice(disjoint_links)
 
         # If the graph is directed, there is only one option.
         # If the graph is undirected, there are two options, each with a 50-50 chance.

@@ -12,10 +12,5 @@ def plot_triad_motif_significance_profile(motif_profile, directed=False):
     fashion.
     """
 
-    plt.xlabel("Triad Motifs")
-    plt.ylabel("Normalized Z-score")
-    plt.title("Triad Motif Significance Profile")
-    plt.show()
-
     raise NotImplementedError
 
