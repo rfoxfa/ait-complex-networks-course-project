@@ -19,8 +19,8 @@ def main():
     """
 
     # Do stuff.
-    # print(time_complexity.compute_undirected_count_execution_time())
-    print(triad_motif_profile.extract_triad_motif_significance_profile(networks.build_random_network()))
+    print(time_complexity.compute_count_execution_time(directed=False))
+    # print(triad_motif_profile.extract_triad_motif_significance_profile(networks.build_random_network()))
 
 
 if __name__ == "__main__":

@@ -24,35 +24,38 @@ def count_triad_motifs(network, directed=None):
 
     if (directed or nx.is_directed(network)):
 
+        # Initialize an array for storing our motif counts.
+        motif_counts = np.zeros(shape=(13,), dtype=np.int)
+
         raise NotImplementedError
 
     else:
-    
-        # Initialize motif counts to 0.
-        # NOTE: for undirected networks, there are only 2 connected non-isomorphic triads.
+
+        # Initialize an array for storing our motif counts. Each index represents the following motif:
+        # 0 => triangle
+        # 1 => chain
         motif_counts = np.zeros(shape=(2,), dtype=np.int)
-        
-        # Compute the number of unique node triplets in the network.
-        triplets = combinations(nx.nodes_iter(network), 3)
-        
-        # Iterate through the triplets.
-        for (a, b, c) in triplets:
+    
+        # Iterate through the edges in the network.
+        for source, target in nx.edges_iter(network):
             
-            # a <-> b <-> c <-> a
-            if b in network[a] and c in network[b] and a in network[c]:
-                motif_counts[0] += 1
-                
-            # a <-> b <-> c
-            elif b in network[a] and c in network[b]:
-                motif_counts[1] += 1
-                
-            # b <-> c <-> a
-            elif c in network[b] and a in network[c]:
-                motif_counts[1] += 1
-                
-            # c <-> a <-> b
-            elif a in network[c] and b in network[a]:
-                motif_counts[1] += 1
+            # Find all source neighbors such that their node ID is greater than the target (which, by the sorted 
+            # nature of nx.edges_iter, will always be greater than source).
+            source_neighbors = [neighbor for neighbor in nx.all_neighbors(network, source) if neighbor > target]
+
+            # Find all target neighbors such that their node ID is greater than the target. The prevents repeated
+            # consideration of node triplets.
+            target_neighbors = [neighbor for neighbor in nx.all_neighbors(network, target) if neighbor > target]
+
+            # Determine the number of unshared neighbors between source and target.
+            # Given a set and a list, symmetric_difference will return an XOR of two lists.
+            num_unshared_neighbors = len(set(source_neighbors).symmetric_difference(target_neighbors))
+            
+            # The number of triangle motifs is the number of common neighbors of source and target.
+            motif_counts[0] += len(source_neighbors) - num_unshared_neighbors
+            
+            # The number of chain motifs is the number of unshared neighbors or source and target.
+            motif_counts[1] += num_unshared_neighbors
     
     return motif_counts
 
@@ -105,10 +108,10 @@ def compute_normalized_triad_motif_z_scores(network, num_rand_instances=10, num_
         rand_motif_squared_counts += counts * counts
 
     # Divide the random motif counts by the number of instances to make them into average counts.
-    rand_motif_counts /= float(num_rand_instances)
+    rand_motif_counts = rand_motif_counts / float(num_rand_instances)
 
     # Divide the random motif squared counts by the number of instances to make them into averages.
-    rand_motif_squared_counts /= float(num_rand_instances)
+    rand_motif_squared_counts = rand_motif_squared_counts / float(num_rand_instances)
 
     # Compute the random motif standard deviation.
     rand_motif_std_dev = np.sqrt(rand_motif_squared_counts - (rand_motif_counts * rand_motif_counts))

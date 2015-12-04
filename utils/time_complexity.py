@@ -6,6 +6,7 @@ import time
 import numpy as np
 import networkx as nx
 from triad_motif_profile import count_triad_motifs
+from networks import build_erdos_renyi_network
 
 
 def compute_count_execution_time(n=300, p=0.5, directed=False, num_iterations=10):
