@@ -42,17 +42,17 @@ def count_triad_motifs(network, directed=None):
         motif_counts = np.zeros(shape=(13,), dtype=np.int)
     
         # Store a set of visited node combinations so repeats don't occur.
-        visited_edges = []
-                
+        visited_pairs = []
+
         # Iterate through the valid edges.
         for a, b in nx.edges_iter(network):
             
             # If the opposite edge has been visited (i.e., the same node pair) ignore the edge.
-            if (b, a) in visited_edges:
+            if (b, a) in visited_pairs:
                 continue
             else:
-                visited_edges.append((a, b))
-
+                visited_pairs.append((a, b))
+                            
             # Take all unique c nodes that form valid a, b, c triplets.
             # By ensuring that all neighbors have node ID greater than b we prevent any unique
             # node triplets from being repeated.
@@ -60,183 +60,231 @@ def count_triad_motifs(network, directed=None):
                                itertools.chain(nx.all_neighbors(network, a), nx.all_neighbors(network, b))
                                if neighbor > max(a, b)])
 
-            # a <-> b
-            if a in network[b]:
+            # a <-------> b
+            # a     c     b
+            if network.has_edge(b, a):
 
                 # Iterate through the valid a, b, c triplets.
                 for c in c_neighbors:
+                    
+                    # a <-------> b
+                    # a --> c     b
+                    if network.has_edge(a, c):
 
-                    # a -> c
-                    if c in network[a]:
+                        # a <-------> b
+                        # a <-> c     b
+                        if network.has_edge(c, a):
 
-                        # a <-> c
-                        if a in network[c]:
+                            # a <-------> b
+                            # a <-> c --> b
+                            if network.has_edge(c, b):
 
-                            # c -> b
-                            if b in network[c]:
-
-                                # c <-> b
-                                if c in network[b]:
+                                # a <-------> b
+                                # a <-> c <-> b
+                                if network.has_edge(b, c):
                                     motif_counts[12] += 1
                                     
-                                # c -> b
+                                # a <-------> b
+                                # a <-> c --> b
                                 else:
                                     motif_counts[11] += 1
 
-                            # b -> c
-                            elif c in network[b]:
+                            # a <-------> b
+                            # a <-> c <-- b
+                            elif network.has_edge(b, c):
                                 motif_counts[11] += 1
 
-                            # c -/-> b
+                            # a <-------> b
+                            # a <-> c     b
                             else:
                                 motif_counts[5] += 1
 
-                        # a -> c  
+                        # a <-------> b
+                        # a --> c     b 
                         else:
                             
-                            # c -> b
-                            if b in network[c]:
+                            # a <-------> b
+                            # a --> c --> b
+                            if network.has_edge(c, b):
 
-                                # c <-> b
-                                if c in network[b]:
+                                # a <-------> b
+                                # a --> c <-> b
+                                if network.has_edge(b, c):
                                     motif_counts[11] += 1
                                     
-                                # c -> b
+                                # a <-------> b
+                                # a --> c --> b
                                 else:
                                     motif_counts[10] += 1
 
-                            # b -> c
-                            elif c in network[b]:
+                            # a <-------> b
+                            # a --> c <-- b
+                            elif network.has_edge(b, c):
                                 motif_counts[8] += 1
 
-                            # c -/-> b
+                            # a <-------> b
+                            # a --> c     b
                             else:
                                 motif_counts[4] += 1
 
-                    # c -> a
-                    elif a in network[c]:
+                    # a <-------> b
+                    # a <-- c     b
+                    elif network.has_edge(c, a):
 
-                        # c -> b
-                        if b in network[c]:
+                        # a <-------> b
+                        # a <-- c --> b
+                        if network.has_edge(c, b):
 
-                            # c <-> b
-                            if c in network[b]:
+                            # a <-------> b
+                            # a <-- c <-> b
+                            if network.has_edge(b, c):
                                 motif_counts[11] += 1
 
-                            # c -> b
+                            # a <-------> b
+                            # a <-- c --> b
                             else:
                                 motif_counts[9] += 1
 
-                        # b -> c
-                        elif c in network[b]:
+                        # a <-------> b
+                        # a <-- c <-- b
+                        elif network.has_edge(b, c):
                             motif_counts[10] += 1
                         
-                        # c -/-> b
+                        # a <-------> b
+                        # a <-- c     b
                         else:
                             motif_counts[3] += 1
 
-                    # b -> c
-                    elif c in network[b]:
+                    # a <-------> b
+                    # a     c <-- b
+                    elif network.has_edge(b, c):
 
-                        # b <-> c
-                        if b in network[c]:
+                        # a <-------> b
+                        # a     c <-> b
+                        if network.has_edge(c, b):
                             motif_counts[5] += 1
 
-                        # b -> c
+                        # a <-------> b
+                        # a     c <-- b
                         else:
                             motif_counts[4] += 1
                         
-                    # c -> b
+                    # a <-------> b
+                    # a     c --> b
                     else:
                         motif_counts[3] += 1
 
-            # a -> b
+            # a --------> b
+            # a     c     b
             else:
                 
                 # Iterate through the valid a, b, c triplets.
                 for c in c_neighbors:
+                    
+                    # a --------> b
+                    # a --> c     b
+                    if network.has_edge(a, c):
 
-                    # a -> c
-                    if c in network[a]:
+                        # a --------> b
+                        # a <-> c     b
+                        if network.has_edge(c, a):
 
-                        # a <-> c
-                        if a in network[c]:
+                            # a --------> b
+                            # a <-> c --> b
+                            if network.has_edge(c, b):
 
-                            # c -> b
-                            if b in network[c]:
-
-                                # c <-> b
-                                if c in network[b]:
+                                # a --------> b
+                                # a <-> c <-> b
+                                if network.has_edge(b, c):
                                     motif_counts[11] += 1
                                     
-                                # c -> b
+                                # a --------> b
+                                # a <-> c --> b
                                 else:
                                     motif_counts[8] += 1
 
-                            # b -> c
-                            elif c in network[b]:
+                            # a --------> b
+                            # a <-> c <-- b
+                            elif network.has_edge(b, c):
                                 motif_counts[10] += 1
 
-                            # c -/-> b
+                            # a --------> b
+                            # a <-> c     b
                             else:
                                 motif_counts[4] += 1
 
-                        # a -> c  
+                        # a --------> b
+                        # a --> c     b 
                         else:
                             
-                            # c -> b
-                            if b in network[c]:
+                            # a --------> b
+                            # a --> c --> b 
+                            if network.has_edge(c, b):
 
-                                # c <-> b
-                                if c in network[b]:
+                                # a --------> b
+                                # a --> c <-> b 
+                                if network.has_edge(b, c):
                                     motif_counts[9] += 1
                                     
-                                # c -> b
+                                # a --------> b
+                                # a --> c --> b 
                                 else:
                                     motif_counts[6] += 1
 
-                            # b -> c
-                            elif c in network[b]:
+                            # a --------> b
+                            # a --> c <-- b 
+                            elif network.has_edge(b, c):
                                 motif_counts[6] += 1
 
-                            # c -/-> b
+                            # a --------> b
+                            # a --> c     b 
                             else:
                                 motif_counts[0] += 1
 
-                    # c -> a
-                    elif a in network[c]:
+                    # a --------> b
+                    # a <-- c     b
+                    elif network.has_edge(c, a):
 
-                        # c -> b
-                        if b in network[c]:
+                        # a --------> b
+                        # a <-- c --> b
+                        if network.has_edge(c, b):
 
-                            # c <-> b
-                            if c in network[b]:
+                            # a --------> b
+                            # a <-- c <-> b
+                            if network.has_edge(b, c):
                                 motif_counts[10] += 1
 
-                            # c -> b
+                            # a --------> b
+                            # a <-- c --> b
                             else:
                                 motif_counts[6] += 1
 
-                        # b -> c
-                        elif c in network[b]:
+                        # a --------> b
+                        # a <-- c <-- b
+                        elif network.has_edge(b, c):
                             motif_counts[7] += 1
                         
-                        # c -/-> b
+                        # a --------> b
+                        # a <-- c     b
                         else:
                             motif_counts[2] += 1
 
-                    # b -> c
-                    elif c in network[b]:
+                    # a --------> b
+                    # a     c <-- b
+                    elif network.has_edge(b, c):
 
-                        # b <-> c
-                        if b in network[c]:
+                        # a --------> b
+                        # a     c <-> b
+                        if network.has_edge(c, b):
                             motif_counts[3] += 1
 
-                        # b -> c
+                        # a --------> b
+                        # a     c <-- b
                         else:
                             motif_counts[2] += 1
                         
-                    # c -> b
+                    # a --------> b
+                    # a     c --> b
                     else:
                         motif_counts[1] += 1
 
