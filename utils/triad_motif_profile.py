@@ -4,6 +4,7 @@ of an input network.
 """
 
 import networkx as nx
+import itertools
 import numpy as np
 from itertools import combinations
 from networks import randomize
@@ -40,7 +41,195 @@ def count_triad_motifs(network, directed=None):
         # 12 => a <-> b <-> c <-> a
         motif_counts = np.zeros(shape=(13,), dtype=np.int)
     
-        raise NotImplementedError
+        # Iterate through the edges in the network.
+        for a, b in [(a, b) for (a, b) in nx.edges_iter(network) if a < b]:
+
+            # Take all unique c nodes that form valid a, b, c triplets.
+            # By ensuring that all neighbors have node ID greater than b we prevent any unique
+            # node triplets from being repeated.
+            c_neighbors = set([neighbor for neighbor in
+                               itertools.chain(nx.all_neighbors(network, a), nx.all_neighbors(network, b))
+                               if neighbor > b])
+
+            # a <-> b
+            if a in network[b]:
+
+                # Iterate through the valid a, b, c triplets.
+                for c in c_neighbors:
+
+                    # a -> c
+                    if c in network[a]:
+
+                        # a <-> c
+                        if a in network[c]:
+
+                            # c -> b
+                            if b in network[c]:
+
+                                # c <-> b
+                                if c in network[b]:
+                                    motif_counts[12] += 1
+                                    
+                                # c -> b
+                                else:
+                                    motif_counts[11] += 1
+
+                            # b -> c
+                            elif c in network[b]:
+                                motif_counts[11] += 1
+
+                            # c -/-> b
+                            else:
+                                motif_counts[5] += 1
+
+                        # a -> c  
+                        else:
+                            
+                            # c -> b
+                            if b in network[c]:
+
+                                # c <-> b
+                                if c in network[b]:
+                                    motif_counts[11] += 1
+                                    
+                                # c -> b
+                                else:
+                                    motif_counts[10] += 1
+
+                            # b -> c
+                            elif c in network[b]:
+                                motif_counts[8] += 1
+
+                            # c -/-> b
+                            else:
+                                motif_counts[4] += 1
+
+                    # c -> a
+                    elif a in network[c]:
+
+                        # c -> b
+                        if b in network[c]:
+
+                            # c <-> b
+                            if c in network[b]:
+                                motif_counts[11] += 1
+
+                            # c -> b
+                            else:
+                                motif_counts[9] += 1
+
+                        # b -> c
+                        elif c in network[b]:
+                            motif_counts[10] += 1
+                        
+                        # c -/-> b
+                        else:
+                            motif_counts[3] += 1
+
+                    # b -> c
+                    elif c in network[b]:
+
+                        # b <-> c
+                        if b in network[c]:
+                            motif_counts[5] += 1
+
+                        # b -> c
+                        else:
+                            motif_counts[4] += 1
+                        
+                    # c -> b
+                    else:
+                        motif_counts[3] += 1
+
+            # a -> b
+            else:
+                
+                # Iterate through the valid a, b, c triplets.
+                for c in c_neighbors:
+
+                    # a -> c
+                    if c in network[a]:
+
+                        # a <-> c
+                        if a in network[c]:
+
+                            # c -> b
+                            if b in network[c]:
+
+                                # c <-> b
+                                if c in network[b]:
+                                    motif_counts[11] += 1
+                                    
+                                # c -> b
+                                else:
+                                    motif_counts[8] += 1
+
+                            # b -> c
+                            elif c in network[b]:
+                                motif_counts[10] += 1
+
+                            # c -/-> b
+                            else:
+                                motif_counts[4] += 1
+
+                        # a -> c  
+                        else:
+                            
+                            # c -> b
+                            if b in network[c]:
+
+                                # c <-> b
+                                if c in network[b]:
+                                    motif_counts[9] += 1
+                                    
+                                # c -> b
+                                else:
+                                    motif_counts[6] += 1
+
+                            # b -> c
+                            elif c in network[b]:
+                                motif_counts[6] += 1
+
+                            # c -/-> b
+                            else:
+                                motif_counts[0] += 1
+
+                    # c -> a
+                    elif a in network[c]:
+
+                        # c -> b
+                        if b in network[c]:
+
+                            # c <-> b
+                            if c in network[b]:
+                                motif_counts[10] += 1
+
+                            # c -> b
+                            else:
+                                motif_counts[6] += 1
+
+                        # b -> c
+                        elif c in network[b]:
+                            motif_counts[7] += 1
+                        
+                        # c -/-> b
+                        else:
+                            motif_counts[2] += 1
+
+                    # b -> c
+                    elif c in network[b]:
+
+                        # b <-> c
+                        if b in network[c]:
+                            motif_counts[3] += 1
+
+                        # b -> c
+                        else:
+                            motif_counts[2] += 1
+                        
+                    # c -> b
+                    else:
+                        motif_counts[1] += 1
 
     else:
 
