@@ -41,15 +41,24 @@ def count_triad_motifs(network, directed=None):
         # 12 => a <-> b <-> c <-> a
         motif_counts = np.zeros(shape=(13,), dtype=np.int)
     
-        # Iterate through the edges in the network.
-        for a, b in [(a, b) for (a, b) in nx.edges_iter(network) if a < b]:
+        # Store a set of visited node combinations so repeats don't occur.
+        visited_edges = []
+                
+        # Iterate through the valid edges.
+        for a, b in nx.edges_iter(network):
+            
+            # If the opposite edge has been visited (i.e., the same node pair) ignore the edge.
+            if (b, a) in visited_edges:
+                continue
+            else:
+                visited_edges.append((a, b))
 
             # Take all unique c nodes that form valid a, b, c triplets.
             # By ensuring that all neighbors have node ID greater than b we prevent any unique
             # node triplets from being repeated.
             c_neighbors = set([neighbor for neighbor in
                                itertools.chain(nx.all_neighbors(network, a), nx.all_neighbors(network, b))
-                               if neighbor > b])
+                               if neighbor > max(a, b)])
 
             # a <-> b
             if a in network[b]:
@@ -315,8 +324,9 @@ def compute_normalized_triad_motif_z_scores(network, num_rand_instances=10, num_
     # Compute the random motif standard deviation.
     rand_motif_std_dev = np.sqrt(rand_motif_squared_counts - (rand_motif_counts * rand_motif_counts))
 
-    # Compute the z-scores.
-    motif_z_scores = (original_motif_counts - rand_motif_counts) / rand_motif_std_dev
+    # Compute the z-scores (ignoring division by 0 warnings and place the resulting NaNs with 0s).
+    with np.errstate(divide='ignore', invalid='ignore'):
+        motif_z_scores = np.nan_to_num((original_motif_counts - rand_motif_counts) / rand_motif_std_dev)
 
     return motif_z_scores
 

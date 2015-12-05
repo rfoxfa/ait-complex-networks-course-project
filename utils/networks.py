@@ -80,6 +80,31 @@ def randomize(network, num_rewirings=None, directed=False):
     return network
 
 
+def load_protein_network():
+    """
+    Loads the directed protein network from class.
+    """
+
+    protein_network = nx.read_edgelist("data/protein_structure.txt",
+                                       create_using=nx.DiGraph(),
+                                       nodetype=str,
+                                       data=[('weight', float)])
+
+    return protein_network
+
+
+def load_word_assoc_network():
+    """
+    Loads the directed word association network from class.
+    """
+
+    word_assoc_network = nx.read_edgelist("data/word_association_graph_DSF.txt",
+                                          create_using=nx.DiGraph(), 
+                                          nodetype=str,
+                                          data=[('weight', float)])
+
+    return word_assoc_network
+
 
 def build_random_network(n=100, m=300, directed=False):
     """
