@@ -22,39 +22,52 @@ def count_triad_motifs(network, directed=None):
         representing their number of occurences within the network.
     """
 
-    if (directed or nx.is_directed(network)):
+    if directed or nx.is_directed(network):
 
-        # Initialize an array for storing our motif counts.
+        # Initialize an array for storing our motif counts. Each index represents the following motif:
+        # 0 => a <- b -> c
+        # 1 => a -> b <- c
+        # 2 => b -> a -> c
+        # 3 => a -> b <-> c
+        # 4 => c <-> a -> b
+        # 5 => a <-> b <-> c
+        # 6 => a <- b -> c <- a
+        # 7 => a -> b -> c -> a
+        # 8 => c <-> a -> b <- c
+        # 9 => c <- a -> b <-> c
+        # 10 => a <-> c -> b -> a
+        # 11 => a <-> b <-> c -> a
+        # 12 => a <-> b <-> c <-> a
         motif_counts = np.zeros(shape=(13,), dtype=np.int)
-
+    
         raise NotImplementedError
 
     else:
 
         # Initialize an array for storing our motif counts. Each index represents the following motif:
-        # 0 => triangle
-        # 1 => chain
+        # 0 => a - b - c - a
+        # 1 => a - b - c
         motif_counts = np.zeros(shape=(2,), dtype=np.int)
     
         # Iterate through the edges in the network.
-        for source, target in nx.edges_iter(network):
+        for a, b in nx.edges_iter(network):
             
-            # Find all source neighbors such that their node ID is greater than the target (which, by the sorted 
-            # nature of nx.edges_iter, will always be greater than source).
-            source_neighbors = [neighbor for neighbor in nx.all_neighbors(network, source) if neighbor > target]
+            # Find all node a neighbors such that their node ID is greater than node b (which, by the sorted 
+            # nature of nx.edges_iter, will always be greater than node a).
+            a_neighbors = [neighbor for neighbor in network[a] if neighbor > b]
 
-            # Find all target neighbors such that their node ID is greater than the target. The prevents repeated
+            # Find all node b neighbors such that their node ID is greater than node b. The prevents repeated
             # consideration of node triplets.
-            target_neighbors = [neighbor for neighbor in nx.all_neighbors(network, target) if neighbor > target]
+            b_neighbors = [neighbor for neighbor in network[b] if neighbor > b]
 
-            # Determine the number of unshared neighbors between source and target.
+            # Determine the number of unshared neighbors between node a and node b.
             # Given a set and a list, symmetric_difference will return an XOR of two lists.
-            num_unshared_neighbors = len(set(source_neighbors).symmetric_difference(target_neighbors))
+            num_unshared_neighbors = len(set(a_neighbors).symmetric_difference(b_neighbors))
             
-            # The number of triangle motifs is the number of common neighbors of source and target.
-            motif_counts[0] += len(source_neighbors) - num_unshared_neighbors
+            # The number of triangle motifs is the number of common neighbors of a and b.
+            motif_counts[0] += len(a_neighbors) - num_unshared_neighbors
             
-            # The number of chain motifs is the number of unshared neighbors or source and target.
+            # The number of chain motifs is the number of unshared neighbors or a and b.
             motif_counts[1] += num_unshared_neighbors
     
     return motif_counts
@@ -80,22 +93,19 @@ def compute_normalized_triad_motif_z_scores(network, num_rand_instances=10, num_
     # Determine if the network is directed or not (store to avoid recalculation).
     directed = nx.is_directed(network)
 
-    # Store the number of connected non-isomorphic motifs to avoid hard-coding these values.
-    num_motifs = 13 if directed else 2
-
     # Count the number of occurences of each triad motif.
     original_motif_counts = count_triad_motifs(network, directed=directed)
 
     # Initialize an array for storing motif counts in randomized instances.
-    rand_motif_counts = np.zeros(shape=(num_motifs,), dtype=np.int)
+    rand_motif_counts = np.zeros(shape=original_motif_counts.shape, dtype=np.int)
 
     # Initialize an array for storing squared motif counts in randomized instances (for standard deviation).
-    rand_motif_squared_counts = np.zeros(shape=(num_motifs,), dtype=np.int)
+    rand_motif_squared_counts = np.zeros(shape=original_motif_counts.shape, dtype=np.int)
 
     # Iterate through random instances.
     for _ in range(num_rand_instances):
 
-        # Randomize the network with either the inputted number of rewirings or m rewirings.
+        # Randomize the network.
         rand_network = randomize(network, num_rewirings=num_rewirings, directed=directed)
 
         # Store the number of occurences of each motif in the randomized instance.
