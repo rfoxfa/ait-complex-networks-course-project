@@ -6,7 +6,7 @@ import networkx as nx
 import random
 
 
-def randomize(network, num_rewirings=None, directed=False):
+def randomize(network, num_rewirings=None):
     """
     Randomizes the network such that the degree sequence is preserved. 
 
@@ -53,7 +53,7 @@ def randomize(network, num_rewirings=None, directed=False):
 
         # If the graph is directed, there is only one option.
         # If the graph is undirected, there are two options, each with a 50-50 chance.
-        if not directed and random.random() < 0.5:
+        if not nx.is_directed(network) and random.random() < 0.5:
 
             # Rewire links A-B and C-D to A-C and B-D.
             new_link1 = (source1, source2)

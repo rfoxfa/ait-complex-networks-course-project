@@ -298,21 +298,17 @@ def count_triad_motifs(network, directed=None):
             
             # Find all node a neighbors such that their node ID is greater than node b (which, by the sorted 
             # nature of nx.edges_iter, will always be greater than node a).
-            a_neighbors = [neighbor for neighbor in network[a] if neighbor > b]
+            a_neighbors = set([neighbor for neighbor in network[a] if neighbor > b])
 
             # Find all node b neighbors such that their node ID is greater than node b. The prevents repeated
             # consideration of node triplets.
-            b_neighbors = [neighbor for neighbor in network[b] if neighbor > b]
-
-            # Determine the number of unshared neighbors between node a and node b.
-            # Given a set and a list, symmetric_difference will return an XOR of two lists.
-            num_unshared_neighbors = len(set(a_neighbors).symmetric_difference(b_neighbors))
+            b_neighbors = set([neighbor for neighbor in network[b] if neighbor > b])
             
             # The number of triangle motifs is the number of common neighbors of a and b.
-            motif_counts[0] += len(a_neighbors) - num_unshared_neighbors
+            motif_counts[0] += len(a_neighbors.intersection(b_neighbors))
             
             # The number of chain motifs is the number of unshared neighbors or a and b.
-            motif_counts[1] += num_unshared_neighbors
+            motif_counts[1] += len(a_neighbors.symmetric_difference(b_neighbors))
     
     return motif_counts
 
@@ -350,7 +346,7 @@ def compute_normalized_triad_motif_z_scores(network, num_rand_instances=10, num_
     for _ in range(num_rand_instances):
 
         # Randomize the network.
-        rand_network = randomize(network, num_rewirings=num_rewirings, directed=directed)
+        rand_network = randomize(network, num_rewirings=num_rewirings)
 
         # Store the number of occurences of each motif in the randomized instance.
         counts = count_triad_motifs(rand_network, directed=directed)
