@@ -42,31 +42,32 @@ def count_triad_motifs(network, directed=None):
         motif_counts = np.zeros(shape=(13,), dtype=np.int)
     
         # Store a set of visited node combinations so repeats don't occur.
-        visited_pairs = []
+        visited_triplets = []
 
         # Iterate through the valid edges.
         for a, b in nx.edges_iter(network):
-            
-            # If the opposite edge has been visited (i.e., the same node pair) ignore the edge.
-            if (b, a) in visited_pairs:
-                continue
-            else:
-                visited_pairs.append((a, b))
-                            
+                                            
             # Take all unique c nodes that form valid a, b, c triplets.
             # By ensuring that all neighbors have node ID greater than b we prevent any unique
             # node triplets from being repeated.
             c_neighbors = set([neighbor for neighbor in
                                itertools.chain(nx.all_neighbors(network, a), nx.all_neighbors(network, b))
-                               if neighbor > max(a, b)])
+                               if neighbor != a and neighbor != b])
 
-            # a <-------> b
-            # a     c     b
-            if network.has_edge(b, a):
+            # Iterate through the valid a, b, c triplets.
+            for c in c_neighbors:
 
-                # Iterate through the valid a, b, c triplets.
-                for c in c_neighbors:
-                    
+                # Make sure unique node triplets aren't repeated.
+                sorted_abc = sorted((a, b, c))
+                if sorted_abc in visited_triplets:
+                    continue
+                else:
+                    visited_triplets.append(sorted_abc)
+            
+                # a <-------> b
+                # a     c     b
+                if network.has_edge(b, a):
+
                     # a <-------> b
                     # a --> c     b
                     if network.has_edge(a, c):
@@ -83,7 +84,7 @@ def count_triad_motifs(network, directed=None):
                                 # a <-> c <-> b
                                 if network.has_edge(b, c):
                                     motif_counts[12] += 1
-                                    
+
                                 # a <-------> b
                                 # a <-> c --> b
                                 else:
@@ -102,7 +103,7 @@ def count_triad_motifs(network, directed=None):
                         # a <-------> b
                         # a --> c     b 
                         else:
-                            
+
                             # a <-------> b
                             # a --> c --> b
                             if network.has_edge(c, b):
@@ -111,7 +112,7 @@ def count_triad_motifs(network, directed=None):
                                 # a --> c <-> b
                                 if network.has_edge(b, c):
                                     motif_counts[11] += 1
-                                    
+
                                 # a <-------> b
                                 # a --> c --> b
                                 else:
@@ -149,7 +150,7 @@ def count_triad_motifs(network, directed=None):
                         # a <-- c <-- b
                         elif network.has_edge(b, c):
                             motif_counts[10] += 1
-                        
+
                         # a <-------> b
                         # a <-- c     b
                         else:
@@ -168,19 +169,16 @@ def count_triad_motifs(network, directed=None):
                         # a     c <-- b
                         else:
                             motif_counts[4] += 1
-                        
+
                     # a <-------> b
                     # a     c --> b
                     else:
                         motif_counts[3] += 1
 
-            # a --------> b
-            # a     c     b
-            else:
-                
-                # Iterate through the valid a, b, c triplets.
-                for c in c_neighbors:
-                    
+                # a --------> b
+                # a     c     b
+                else:
+
                     # a --------> b
                     # a --> c     b
                     if network.has_edge(a, c):
@@ -197,7 +195,7 @@ def count_triad_motifs(network, directed=None):
                                 # a <-> c <-> b
                                 if network.has_edge(b, c):
                                     motif_counts[11] += 1
-                                    
+
                                 # a --------> b
                                 # a <-> c --> b
                                 else:
@@ -216,7 +214,7 @@ def count_triad_motifs(network, directed=None):
                         # a --------> b
                         # a --> c     b 
                         else:
-                            
+
                             # a --------> b
                             # a --> c --> b 
                             if network.has_edge(c, b):
@@ -225,7 +223,7 @@ def count_triad_motifs(network, directed=None):
                                 # a --> c <-> b 
                                 if network.has_edge(b, c):
                                     motif_counts[9] += 1
-                                    
+
                                 # a --------> b
                                 # a --> c --> b 
                                 else:
@@ -263,7 +261,7 @@ def count_triad_motifs(network, directed=None):
                         # a <-- c <-- b
                         elif network.has_edge(b, c):
                             motif_counts[7] += 1
-                        
+
                         # a --------> b
                         # a <-- c     b
                         else:
@@ -282,7 +280,7 @@ def count_triad_motifs(network, directed=None):
                         # a     c <-- b
                         else:
                             motif_counts[2] += 1
-                        
+
                     # a --------> b
                     # a     c --> b
                     else:

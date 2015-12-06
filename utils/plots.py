@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from triad_motif_profile import extract_triad_motif_significance_profile
 
 
-def plot_triad_motif_significance_profile(network, num_runs=10):
+def plot_triad_motif_significance_profile(network, title=None, num_runs=10):
     """
     Plots the triad motif significance profile for the input network.
 
@@ -23,7 +23,7 @@ def plot_triad_motif_significance_profile(network, num_runs=10):
     # Label the plot.
     plt.xlabel("Triad Motifs")
     plt.ylabel("Normalized Z-Score")
-    plt.title("Triad Motif Significance Profile")
+    plt.title(title or "Triad Motif Significance Profile")
 
     # Perform the initial run.
     Y = extract_triad_motif_significance_profile(network)
