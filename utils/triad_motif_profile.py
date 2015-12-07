@@ -45,7 +45,7 @@ def count_triad_motifs(network, directed=None):
         visited_triplets = []
 
         # Iterate through the valid edges.
-        for a, b in nx.edges_iter(network):
+        for a, b in sorted(nx.edges_iter(network)):
                                             
             # Take all unique c nodes that form valid a, b, c triplets.
             # By ensuring that all neighbors have node ID greater than b we prevent any unique
@@ -294,7 +294,7 @@ def count_triad_motifs(network, directed=None):
         motif_counts = np.zeros(shape=(2,), dtype=np.int)
     
         # Iterate through the edges in the network.
-        for a, b in nx.edges_iter(network):
+        for a, b in sorted(nx.edges_iter(network)):
             
             # Find all node a neighbors such that their node ID is greater than node b (which, by the sorted 
             # nature of nx.edges_iter, will always be greater than node a).
@@ -337,38 +337,46 @@ def compute_normalized_triad_motif_z_scores(network, num_rand_instances=10, num_
     original_motif_counts = count_triad_motifs(network, directed=directed)
 
     # Initialize an array for storing motif counts in randomized instances.
-    rand_motif_counts = np.zeros(shape=original_motif_counts.shape, dtype=np.int)
-
-    # Initialize an array for storing squared motif counts in randomized instances (for standard deviation).
-    rand_motif_squared_counts = np.zeros(shape=original_motif_counts.shape, dtype=np.int)
+    rand_motif_counts = []
 
     # Iterate through random instances.
-    for _ in range(num_rand_instances):
+    for i in range(num_rand_instances):
+
+        # Update the user.
+        print("Randomizing network...")
 
         # Randomize the network.
         rand_network = randomize(network, num_rewirings=num_rewirings)
 
+        # Update the user.
+        print("Counting motifs...")
+
         # Store the number of occurences of each motif in the randomized instance.
-        counts = count_triad_motifs(rand_network, directed=directed)
+        rand_motif_counts.append(count_triad_motifs(rand_network, directed=directed))
 
-        # Add the counts to the total random motif counts.
-        rand_motif_counts += counts
+        # Tell the user that we've finished one random instance.
+        print("Counted triad motifs for randomized network instance #{}.".format(i + 1))
 
-        # Add the squared counts to the total squared counts.
-        rand_motif_squared_counts += counts * counts
+    # Update the user.
+    print("Computing z-scores...")
+
+    # Stack the counts as an array.
+    rand_motif_counts = np.vstack(rand_motif_counts)
 
     # Divide the random motif counts by the number of instances to make them into average counts.
-    rand_motif_counts = rand_motif_counts / float(num_rand_instances)
-
-    # Divide the random motif squared counts by the number of instances to make them into averages.
-    rand_motif_squared_counts = rand_motif_squared_counts / float(num_rand_instances)
+    avg_rand_motif_counts = np.mean(rand_motif_counts, axis=0)
 
     # Compute the random motif standard deviation.
-    rand_motif_std_dev = np.sqrt(rand_motif_squared_counts - (rand_motif_counts * rand_motif_counts))
+    rand_motif_std_dev = np.std(rand_motif_counts, axis=0)
 
-    # Compute the z-scores (ignoring division by 0 warnings and place the resulting NaNs with 0s).
+    # Compute the z-scores (ignoring division by 0 warnings and place the resulting NaNs/infs with 0s).
     with np.errstate(divide='ignore', invalid='ignore'):
-        motif_z_scores = np.nan_to_num((original_motif_counts - rand_motif_counts) / rand_motif_std_dev)
+        motif_z_scores = (original_motif_counts - avg_rand_motif_counts) / rand_motif_std_dev
+        motif_z_scores[motif_z_scores == np.inf] = 0
+        motif_z_scores = np.nan_to_num(motif_z_scores)
+
+    # Update the user.
+    print("Done.\n")
 
     return motif_z_scores
 
@@ -391,6 +399,9 @@ def extract_triad_motif_significance_profile(network, num_rand_instances=10, num
 
     # Make sure the network labels are encoded as integer IDs (makes everything easier).
     network = nx.convert_node_labels_to_integers(network)
+
+    # Notify the user that we've started.
+    print("Extracting significance profile...")
 
     # Build an array of normalized motif expression z-scores (indices indicate unique motifs).
     significance_profile = compute_normalized_triad_motif_z_scores(network, 
