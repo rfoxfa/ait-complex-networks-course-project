@@ -12,6 +12,82 @@ from triad_motif_profile import extract_triad_motif_significance_profile, count_
 from networks import random_rewiring
 
 
+def plot_triad_motif_counts(network, title=None):
+    """
+    Plots the triad motif counts for the input network.
+
+    Arguments:
+        network => The input network (directed or undirected).
+        title => A custom title for the plot (let's you specify which plot you're looking at).
+
+    Returns:
+        Nothing but produces a plot showing the triad motif counts.
+    """
+
+    # Determine if the network is directed or not.
+    directed = nx.is_directed(network)
+    
+    # Create a figure with hardcoded dimensions and one subplot.
+    fig = plt.figure(figsize=(16, 10))
+    ax = fig.add_subplot(1, 1, 1)
+
+    # Set some parameters specific to the directionality of the network.
+    if directed:
+        num_motifs = 13
+        ax.margins(0.05, 0.05)
+        motif_images = [OffsetImage(read_png("../project/static/directed_motif_1.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_2.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_3.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_4.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_5.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_6.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_7.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_8.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_9.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_10.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_11.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_12.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/directed_motif_13.png"), zoom=0.6)]
+    else:
+        num_motifs = 2
+        ax.margins(0.5, 0.5)
+        motif_images = [OffsetImage(read_png("../project/static/undirected_motif_1.png"), zoom=0.6),
+                        OffsetImage(read_png("../project/static/undirected_motif_2.png"), zoom=0.6)]
+
+    # Define x values (integer for each motif).
+    X = np.arange(1, num_motifs + 1)
+
+    # Run the extraction code.
+    Y = count_triad_motifs(network)
+
+    # Plot the y-values with straight lines connecting them.
+    ax.scatter(X, Y, s=150)
+        
+    # Define the x-y coordinate offsets for the images on the plot.
+    y_offset = -50
+    x_offset = 0
+        
+    # Add each image to the plot.
+    for image, x in zip(motif_images, X):
+        ax.add_artist(AnnotationBbox(image, (x, ax.get_ylim()[0]), xybox=(x_offset, y_offset), xycoords='data',
+                                     boxcoords='offset points', frameon=False))  
+
+    # Title and label the plot.
+    plt.title(title or "Triad Motif Counts")
+    plt.xlabel("Triad Motifs", labelpad=75)
+    plt.ylabel("Frequency")
+
+    # Set the y-axis tick marks.
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax.yaxis.set_minor_locator(ticker.MultipleLocator(5))
+    
+    # Add extra spacing at the bottom of the plot for the images.
+    plt.subplots_adjust(bottom=0.2)
+
+    # Show the resulting plot.
+    plt.show()
+
+
 def plot_triad_motif_significance_profile(network, num_runs=20, title=None):
     """
     Plots the triad motif significance profile for the input network.
@@ -78,7 +154,6 @@ def plot_triad_motif_significance_profile(network, num_runs=20, title=None):
     for image, x in zip(motif_images, X):
         ax.add_artist(AnnotationBbox(image, (x, ax.get_ylim()[0]), xybox=(x_offset, y_offset), xycoords='data',
                                      boxcoords='offset points', frameon=False))  
-
 
     # Title and label the plot.
     plt.title(title or "Triad Motif Significance Profile")
@@ -192,13 +267,14 @@ def plot_motif_changes_over_randomization_steps(network, colormap="rainbow", rew
     plt.show()
 
 
-def plot_triad_motif_significance_profiles(networks, labels, title=None):
+def plot_triad_motif_significance_profiles(networks, labels, num_runs=20, title=None):
     """
     Plots the triad motif significance profile for the input network.
 
     Arguments:
         networks => A list of input networks (directed or undirected).
         labels => A list of network labels for the legend.
+        num_runs => The number of extractions for each network (to be averaged together).
         title => A custom title for the plot (let's you specify which plot you're looking at).
 
     Returns:
@@ -240,11 +316,20 @@ def plot_triad_motif_significance_profiles(networks, labels, title=None):
     X = np.arange(1, num_motifs + 1)
     plt.xticks(X)
 
-    # Iterate through the extraction instances (synonymous with each color instance).
+    # Iterate through the networks (synonymous with each color instance).
     for network, label in zip(networks, labels):
 
-        # Run the extraction code.
+        # Run the extraction code once.
         Y = extract_triad_motif_significance_profile(network)
+
+        # Iterate through the extraction instances to compute an average.
+        for _ in range(num_runs - 1):
+
+            # Add to the counts.
+            Y += extract_triad_motif_significance_profile(network)
+
+        # Divide by the number of extractions to get the average values.
+        Y /= num_runs
 
         # Plot the y-values with straight lines connecting them.
         ax.plot(X, Y, label=label, linewidth=2.0)
@@ -260,7 +345,6 @@ def plot_triad_motif_significance_profiles(networks, labels, title=None):
     for image, x in zip(motif_images, X):
         ax.add_artist(AnnotationBbox(image, (x, ax.get_ylim()[0]), xybox=(x_offset, y_offset), xycoords='data',
                                      boxcoords='offset points', frameon=False))  
-
 
     # Title and label the plot.
     plt.title(title or "Triad Motif Significance Profiles")
